@@ -97,5 +97,48 @@ public static class ItemEndpoints
         .WithName("GetAllItensDisponiveis")
         .WithSummary("Busca todos os itens que estão atualmente disponíveis para troca.")
         .WithOpenApi();
+
+        group.MapGet("/ofertavel/{alunoId}", async Task<Results<Ok<List<Item>>, NotFound>> (int alunoId, AppDbContext db) =>
+        {
+            var alunoExists = await db.Aluno.AnyAsync(a => a.Id == alunoId);
+            if (!alunoExists)
+            {
+                return TypedResults.NotFound(); // Aluno não encontrado
+            }
+
+            var itensOfertavel = await db.Item
+                .AsNoTracking()
+                .Where(i => i.Status == StatusItem.Disponivel && // Deve estar disponível
+                            i.AlunoId != alunoId)                 // NÃO pode ser o item do próprio aluno
+                .ToListAsync();
+
+            return TypedResults.Ok(itensOfertavel);
+        })
+        .WithName("GetItensOfertavelByAlunoId")
+        .WithSummary("Lista todos os itens disponíveis para troca, exceto aqueles que pertencem ao aluno especificado.")
+        .WithOpenApi();
+
+        group.MapPost("/lote", async (List<Item> itens, AppDbContext db) =>
+        {
+            if (itens == null || !itens.Any())
+            {
+                return TypedResults.BadRequest("A lista de itens não pode ser vazia.");
+            }
+
+            foreach (var item in itens)
+            {
+                item.Status = StatusItem.Disponivel;
+                item.DataCadastro = DateTimeOffset.Now;
+            }
+
+            db.Item.AddRange(itens);
+
+            await db.SaveChangesAsync();
+
+            return TypedResults.Created($"/api/Item/lote", itens);
+        })
+        .WithName("CreateItensLote")
+        .WithSummary("Cadastra uma lista de novos itens para troca em um único lote.")
+        .WithOpenApi();
     }
 }
