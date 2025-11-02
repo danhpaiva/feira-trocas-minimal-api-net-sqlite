@@ -122,21 +122,5 @@ public static class AlunoEndpoints
         .WithOpenApi()
         .WithSummary("Listar trocas Recebidas pelo aluno (AlunoRecebedorId)");
 
-        group.MapPost("/lote", async (List<Aluno> alunos, AppDbContext db) =>
-        {
-            if (alunos == null || !alunos.Any())
-            {
-                return TypedResults.BadRequest("A lista de alunos não pode ser vazia.");
-            }
-
-            db.Aluno.AddRange(alunos);
-
-            await db.SaveChangesAsync();
-
-            return TypedResults.Created($"/api/Aluno/lote", alunos);
-        })
-        .WithName("CreateAlunosLote")
-        .WithSummary("Cadastra uma lista de novos alunos em um único lote.")
-        .WithOpenApi();
     }
 }

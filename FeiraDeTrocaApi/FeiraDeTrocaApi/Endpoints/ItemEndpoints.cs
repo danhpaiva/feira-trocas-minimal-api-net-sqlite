@@ -66,25 +66,6 @@ public static class ItemEndpoints
         .WithName("DeleteItem")
         .WithOpenApi();
 
-        group.MapGet("/disponivel/{categoria}", async (string categoria, AppDbContext db) =>
-        {
-            if (string.IsNullOrWhiteSpace(categoria))
-            {
-                return TypedResults.BadRequest("A categoria deve ser informada.");
-            }
-
-            var itens = await db.Item
-                .AsNoTracking()
-                .Where(i => i.Categoria.ToLower() == categoria.ToLower() &&
-                            i.Status == StatusItem.Disponivel) // Filtro essencial para "disponível"
-                .ToListAsync();
-
-            return TypedResults.Ok(itens);
-        })
-        .WithName("GetItensDisponiveisPorCategoria")
-        .WithSummary("Busca todos os itens disponíveis para troca em uma categoria específica.")
-        .WithOpenApi();
-
         group.MapGet("/disponiveis", async (AppDbContext db) =>
         {
             var itens = await db.Item
@@ -116,29 +97,6 @@ public static class ItemEndpoints
         })
         .WithName("GetItensOfertavelByAlunoId")
         .WithSummary("Lista todos os itens disponíveis para troca, exceto aqueles que pertencem ao aluno especificado.")
-        .WithOpenApi();
-
-        group.MapPost("/lote", async (List<Item> itens, AppDbContext db) =>
-        {
-            if (itens == null || !itens.Any())
-            {
-                return TypedResults.BadRequest("A lista de itens não pode ser vazia.");
-            }
-
-            foreach (var item in itens)
-            {
-                item.Status = StatusItem.Disponivel;
-                item.DataCadastro = DateTimeOffset.Now;
-            }
-
-            db.Item.AddRange(itens);
-
-            await db.SaveChangesAsync();
-
-            return TypedResults.Created($"/api/Item/lote", itens);
-        })
-        .WithName("CreateItensLote")
-        .WithSummary("Cadastra uma lista de novos itens para troca em um único lote.")
         .WithOpenApi();
     }
 }

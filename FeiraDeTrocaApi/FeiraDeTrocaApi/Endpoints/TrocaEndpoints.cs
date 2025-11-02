@@ -112,7 +112,7 @@ public static class TrocaEndpoints
 
                 return TypedResults.Ok();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 await transaction.RollbackAsync();
 
@@ -152,30 +152,6 @@ public static class TrocaEndpoints
         })
         .WithName("RejeitarTroca")
         .WithSummary("Muda o status de uma troca para Rejeitada.")
-        .WithOpenApi();
-
-        group.MapPost("/lote", async (List<Troca> trocas, AppDbContext db) =>
-        {
-            if (trocas == null || !trocas.Any())
-            {
-                return TypedResults.BadRequest("A lista de trocas não pode ser vazia.");
-            }
-
-            foreach (var troca in trocas)
-            {
-                troca.Status = StatusTroca.Pendente;
-                troca.DataProposta = DateTimeOffset.Now;
-                troca.DataResposta = null; // Garante que a data de resposta é nula
-            }
-
-            db.Troca.AddRange(trocas);
-
-            await db.SaveChangesAsync();
-
-            return TypedResults.Created($"/api/Troca/lote", trocas);
-        })
-        .WithName("CreateTrocasLote")
-        .WithSummary("Cadastra uma lista de propostas de troca em um único lote.")
         .WithOpenApi();
     }
 }
