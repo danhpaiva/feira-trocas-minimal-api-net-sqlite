@@ -21,4 +21,6 @@ app.UseHttpsRedirection();
 
 app.MapAlunoEndpoints();
 
+app.MapItemEndpoints();
+
 app.Run();
