@@ -23,4 +23,6 @@ app.MapAlunoEndpoints();
 
 app.MapItemEndpoints();
 
+app.MapTrocaEndpoints();
+
 app.Run();

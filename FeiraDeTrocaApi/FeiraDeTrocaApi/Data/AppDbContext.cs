@@ -16,5 +16,6 @@ namespace FeiraDeTrocaApi.Data
 
         public DbSet<FeiraDeTrocaApi.Models.Aluno> Aluno { get; set; } = default!;
         public DbSet<FeiraDeTrocaApi.Models.Item> Item { get; set; } = default!;
+        public DbSet<FeiraDeTrocaApi.Models.Troca> Troca { get; set; } = default!;
     }
 }
