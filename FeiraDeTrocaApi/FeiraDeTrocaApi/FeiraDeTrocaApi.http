@@ -1,0 +1,6 @@
+@FeiraDeTrocaApi_HostAddress = http://localhost:5107
+
+GET {{FeiraDeTrocaApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
