@@ -122,5 +122,36 @@ public static class TrocaEndpoints
         .WithName("AceitarTroca")
         .WithSummary("Muda o status de uma troca para Aceita e atualiza o status dos itens envolvidos para Trocado.")
         .WithOpenApi();
+
+        group.MapPut("/{id}/Rejeitar", async Task<Results<Ok, NotFound, BadRequest>> (int id, AppDbContext db) =>
+        {
+            var troca = await db.Troca
+                .AsNoTracking()
+                .FirstOrDefaultAsync(t => t.Id == id);
+
+            if (troca is null)
+            {
+                return TypedResults.NotFound();
+            }
+
+            if (troca.Status != StatusTroca.Pendente)
+            {
+                return TypedResults.BadRequest();
+            }
+
+            var affected = await db.Troca
+                .Where(t => t.Id == id)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(t => t.Status, StatusTroca.Rejeitada)
+                    .SetProperty(t => t.DataResposta, DateTimeOffset.Now));
+
+            return affected == 1
+                ? TypedResults.Ok()
+                : TypedResults.NotFound();
+
+        })
+        .WithName("RejeitarTroca")
+        .WithSummary("Muda o status de uma troca para Rejeitada.")
+        .WithOpenApi();
     }
 }
