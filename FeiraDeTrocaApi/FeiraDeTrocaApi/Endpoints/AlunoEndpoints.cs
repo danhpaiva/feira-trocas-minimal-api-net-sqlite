@@ -1,8 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
-using FeiraDeTrocaApi.Data;
+﻿using FeiraDeTrocaApi.Data;
 using FeiraDeTrocaApi.Models;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OpenApi;
+using Microsoft.EntityFrameworkCore;
 namespace FeiraDeTrocaApi.Endpoints;
 
 public static class AlunoEndpoints
@@ -63,5 +64,62 @@ public static class AlunoEndpoints
         })
         .WithName("DeleteAluno")
         .WithOpenApi();
+
+        group.MapGet("/{id}/Itens", async Task<Results<Ok<List<Item>>, NotFound>> (int id, AppDbContext db) =>
+        {
+            var alunoExists = await db.Aluno.AnyAsync(a => a.Id == id);
+            if (!alunoExists)
+            {
+                return TypedResults.NotFound();
+            }
+
+            var itens = await db.Item
+                .Where(i => i.AlunoId == id)
+                .AsNoTracking()
+                .ToListAsync();
+
+            return TypedResults.Ok(itens);
+        })
+        .WithName("GetItensByAluno")
+        .WithOpenApi()
+        .WithSummary("Listar todos os itens de um aluno");
+
+        group.MapGet("/{id}/TrocasOfertadas", async Task<Results<Ok<List<Troca>>, NotFound>> (int id, AppDbContext db) =>
+        {
+            var alunoExists = await db.Aluno.AnyAsync(a => a.Id == id);
+            if (!alunoExists)
+            {
+                return TypedResults.NotFound();
+            }
+
+            var trocas = await db.Troca
+                .Where(t => t.AlunoOfertanteId == id)
+                .AsNoTracking()
+                .ToListAsync();
+
+            return TypedResults.Ok(trocas);
+        })
+        .WithName("GetTrocasOfertadasByAluno")
+        .WithOpenApi()
+        .WithSummary("Listar trocas Ofertadas pelo aluno (AlunoOfertanteId)"); ;
+
+        group.MapGet("/{id}/TrocasRecebidas", async Task<Results<Ok<List<Troca>>, NotFound>> (int id, AppDbContext db) =>
+        {
+            var alunoExists = await db.Aluno.AnyAsync(a => a.Id == id);
+            if (!alunoExists)
+            {
+                return TypedResults.NotFound();
+            }
+
+            var trocas = await db.Troca
+                .Where(t => t.AlunoRecebedorId == id)
+                .AsNoTracking()
+                .ToListAsync();
+
+            return TypedResults.Ok(trocas);
+        })
+        .WithName("GetTrocasRecebidasByAluno")
+        .WithOpenApi()
+        .WithSummary("Listar trocas Recebidas pelo aluno (AlunoRecebedorId)");
     }
 }

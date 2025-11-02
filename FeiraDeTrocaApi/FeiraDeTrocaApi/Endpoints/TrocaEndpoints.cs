@@ -66,5 +66,61 @@ public static class TrocaEndpoints
         })
         .WithName("DeleteTroca")
         .WithOpenApi();
+
+        group.MapPut("/{id}/Aceitar", async Task<Results<Ok, NotFound, BadRequest>> (int id, AppDbContext db) =>
+        {
+            var troca = await db.Troca
+                .FirstOrDefaultAsync(t => t.Id == id);
+
+            if (troca is null)
+            {
+                return TypedResults.NotFound();
+            }
+
+            if (troca.Status != StatusTroca.Pendente)
+            {
+                return TypedResults.BadRequest();
+            }
+
+            await using var transaction = await db.Database.BeginTransactionAsync();
+            
+            try
+            {
+                var affectedTroca = await db.Troca
+                    .Where(t => t.Id == id)
+                    .ExecuteUpdateAsync(setters => setters
+                        .SetProperty(t => t.Status, StatusTroca.Aceita)
+                        .SetProperty(t => t.DataResposta, DateTimeOffset.Now));
+
+                if (affectedTroca == 0) throw new Exception("Falha ao atualizar o status da Troca.");
+
+                var affectedItemOfertado = await db.Item
+                    .Where(i => i.Id == troca.ItemOfertadoId)
+                    .ExecuteUpdateAsync(setters => setters
+                        .SetProperty(i => i.Status, StatusItem.Trocado));
+
+                if (affectedItemOfertado == 0) throw new Exception("Falha ao atualizar o status do Item Ofertado.");
+
+                var affectedItemRecebido = await db.Item
+                    .Where(i => i.Id == troca.ItemRecebidoId)
+                    .ExecuteUpdateAsync(setters => setters
+                        .SetProperty(i => i.Status, StatusItem.Trocado));
+
+                if (affectedItemRecebido == 0) throw new Exception("Falha ao atualizar o status do Item Recebido.");
+
+                await transaction.CommitAsync();
+
+                return TypedResults.Ok();
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+
+                return TypedResults.BadRequest();
+            }
+        })
+        .WithName("AceitarTroca")
+        .WithSummary("Muda o status de uma troca para Aceita e atualiza o status dos itens envolvidos para Trocado.")
+        .WithOpenApi();
     }
 }
