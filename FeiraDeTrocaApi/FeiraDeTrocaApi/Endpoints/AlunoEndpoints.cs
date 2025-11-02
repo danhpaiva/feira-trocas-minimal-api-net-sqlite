@@ -122,5 +122,6 @@ public static class AlunoEndpoints
         .WithOpenApi()
         .WithSummary("Listar trocas Recebidas pelo aluno (AlunoRecebedorId)");
 
+
     }
 }
