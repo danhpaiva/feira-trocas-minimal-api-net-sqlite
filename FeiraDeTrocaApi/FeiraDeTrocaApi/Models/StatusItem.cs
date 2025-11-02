@@ -1,4 +1,3 @@
-﻿namespace FeiraDeTrocaApi.Models
-{
-    public enum StatusItem { Disponivel, Reservado, Trocado }
-}
+﻿namespace FeiraDeTrocaApi.Models;
+
+public enum StatusItem { Disponivel, Reservado, Trocado }
